@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
-import android.widget.Toast
 import androidx.preference.ListPreference
 import androidx.preference.SwitchPreference
 import com.fsck.k9.Account
@@ -34,16 +33,15 @@ import com.fsck.k9.ui.withArguments
 import com.takisoft.preferencex.PreferenceFragmentCompat
 import org.koin.android.architecture.ext.sharedViewModel
 import org.koin.android.ext.android.inject
-import org.openintents.openpgp.OpenPgpApiManager
+import org.openintents.openpgp.util.OpenPgpApi
 import org.openintents.openpgp.util.OpenPgpKeyPreference
-import org.openintents.openpgp.util.OpenPgpProviderUtil
 import org.sufficientlysecure.keychain.ui.MainActivity
 
 class AccountSettingsFragment : PreferenceFragmentCompat(), ConfirmationDialogFragmentListener {
     private val viewModel: AccountSettingsViewModel by sharedViewModel()
     private val dataStoreFactory: AccountSettingsDataStoreFactory by inject()
     private val storageManager: StorageManager by inject()
-    private val openPgpApiManager: OpenPgpApiManager by inject(parameters = { mapOf("lifecycleOwner" to this) })
+    private val openPgpApi: OpenPgpApi by inject()
     private val messagingController: MessagingController by inject()
     private val accountRemover: BackgroundAccountRemover by inject()
     private lateinit var dataStore: AccountSettingsDataStore
@@ -211,24 +209,13 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), ConfirmationDialogFr
         val isPgpConfigured = pgpProvider != null
 
         if (isPgpConfigured) {
-            pgpProviderName = getOpenPgpProviderName(pgpProvider)
-            if (pgpProviderName == null) {
-                Toast.makeText(requireContext(), R.string.account_settings_openpgp_missing, Toast.LENGTH_LONG).show()
-
-                pgpProvider = null
-                removeOpenPgpProvider(account)
-            }
+            pgpProviderName = "K-9"
         }
 
         configureEnablePgpSupport(account, isPgpConfigured, pgpProviderName)
         configurePgpKey(account, pgpProvider)
         configureAutocryptTransfer(account)
         configureAutocryptManageKeys()
-    }
-
-    private fun getOpenPgpProviderName(pgpProvider: String?): String? {
-        val packageManager = requireActivity().packageManager
-        return OpenPgpProviderUtil.getOpenPgpProviderName(packageManager, pgpProvider)
     }
 
     private fun configureEnablePgpSupport(account: Account, isPgpConfigured: Boolean, pgpProviderName: String?) {
@@ -238,14 +225,8 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), ConfirmationDialogFr
                 setSummary(R.string.account_settings_crypto_summary_off)
                 oneTimeClickListener(clickHandled = false) {
                     val context = requireContext().applicationContext
-                    val openPgpProviderPackages = OpenPgpProviderUtil.getOpenPgpProviderPackages(context)
-                    if (openPgpProviderPackages.size == 1) {
-                        setOpenPgpProvider(account, openPgpProviderPackages[0])
-                        configureCryptoPreferences(account)
-                    } else {
-                        summary = getString(R.string.account_settings_crypto_summary_config)
-                        OpenPgpAppSelectDialog.startOpenPgpChooserActivity(requireActivity(), account)
-                    }
+                    setOpenPgpProvider(account, "com.fsck.k9.debug")
+                    configureCryptoPreferences(account)
                 }
             } else {
                 isChecked = true
@@ -261,7 +242,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), ConfirmationDialogFr
     private fun configurePgpKey(account: Account, pgpProvider: String?) {
         (findPreference(PREFERENCE_OPENPGP_KEY) as OpenPgpKeyPreference).apply {
             value = account.openPgpKey
-            setOpenPgpProvider(openPgpApiManager, pgpProvider)
+            setOpenPgpProvider(openPgpApi)
             setIntentSenderFragment(this@AccountSettingsFragment)
             setDefaultUserId(OpenPgpApiHelper.buildUserId(account.getIdentity(0)))
             setShowAutocryptHint(true)
