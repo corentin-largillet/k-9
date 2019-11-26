@@ -1,6 +1,5 @@
 package com.fsck.k9.ui.settings.account
 
-import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.Menu
@@ -14,7 +13,6 @@ import com.fsck.k9.activity.setup.AccountSetupComposition
 import com.fsck.k9.activity.setup.AccountSetupIncoming
 import com.fsck.k9.activity.setup.AccountSetupOutgoing
 import com.fsck.k9.controller.MessagingController
-import com.fsck.k9.crypto.OpenPgpApiHelper
 import com.fsck.k9.fragment.ConfirmationDialogFragment
 import com.fsck.k9.fragment.ConfirmationDialogFragment.ConfirmationDialogFragmentListener
 import com.fsck.k9.mailstore.Folder
@@ -22,7 +20,6 @@ import com.fsck.k9.mailstore.FolderType
 import com.fsck.k9.mailstore.RemoteFolderInfo
 import com.fsck.k9.mailstore.StorageManager
 import com.fsck.k9.ui.R
-import com.fsck.k9.ui.endtoend.AutocryptKeyTransferActivity
 import com.fsck.k9.ui.observe
 import com.fsck.k9.ui.settings.onClick
 import com.fsck.k9.ui.settings.remove
@@ -31,15 +28,11 @@ import com.fsck.k9.ui.withArguments
 import com.takisoft.preferencex.PreferenceFragmentCompat
 import org.koin.android.architecture.ext.sharedViewModel
 import org.koin.android.ext.android.inject
-import org.openintents.openpgp.util.OpenPgpApi
-import org.openintents.openpgp.util.OpenPgpKeyPreference
-import org.sufficientlysecure.keychain.ui.MainActivity
 
 class AccountSettingsFragment : PreferenceFragmentCompat(), ConfirmationDialogFragmentListener {
     private val viewModel: AccountSettingsViewModel by sharedViewModel()
     private val dataStoreFactory: AccountSettingsDataStoreFactory by inject()
     private val storageManager: StorageManager by inject()
-    private val openPgpApi: OpenPgpApi by inject()
     private val messagingController: MessagingController by inject()
     private val accountRemover: BackgroundAccountRemover by inject()
     private lateinit var dataStore: AccountSettingsDataStore
@@ -70,7 +63,6 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), ConfirmationDialogFr
         initializeMessageAge(account)
         initializeAdvancedPushSettings(account)
         initializeLocalStorageProvider()
-        initializeCryptoSettings(account)
         initializeFolderSettings(account)
         initializeNotifications()
     }
@@ -78,14 +70,6 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), ConfirmationDialogFr
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         requireActivity().title = title
-    }
-
-    override fun onResume() {
-        super.onResume()
-
-        // we might be returning from OpenPgpAppSelectDialog, make sure settings are up to date
-        val account = getAccount()
-        initializeCryptoSettings(account)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -195,44 +179,6 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), ConfirmationDialogFr
         }
     }
 
-    private fun initializeCryptoSettings(account: Account) {
-        findPreference(PREFERENCE_OPENPGP)?.let {
-            configureCryptoPreferences(account)
-        }
-    }
-
-    private fun configureCryptoPreferences(account: Account) {
-        // TODO remove
-        val pgpProvider = "com.fsck.k9.debug"
-
-        configurePgpKey(account, pgpProvider)
-        configureAutocryptTransfer(account)
-        configureAutocryptManageKeys()
-    }
-
-    private fun configurePgpKey(account: Account, pgpProvider: String?) {
-        (findPreference(PREFERENCE_OPENPGP_KEY) as OpenPgpKeyPreference).apply {
-            setOpenPgpProvider(openPgpApi)
-            setIntentSenderFragment(this@AccountSettingsFragment)
-            setDefaultUserId(OpenPgpApiHelper.buildUserId(account.getIdentity(0)))
-            setShowAutocryptHint(true)
-        }
-    }
-
-    private fun configureAutocryptTransfer(account: Account) {
-        findPreference(PREFERENCE_AUTOCRYPT_TRANSFER).onClick {
-            val intent = AutocryptKeyTransferActivity.createIntent(requireContext(), account.uuid)
-            startActivity(intent)
-        }
-    }
-
-    private fun configureAutocryptManageKeys() {
-        findPreference(PREFERENCE_AUTOCRYPT_MANAGE).onClick {
-            val intent = Intent(context, MainActivity::class.java)
-            startActivity(intent)
-        }
-    }
-
     private fun initializeFolderSettings(account: Account) {
         findPreference(PREFERENCE_FOLDERS)?.let {
             if (!messagingController.isMoveCapable(account)) {
@@ -272,14 +218,6 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), ConfirmationDialogFr
         folderListPreference.setFolders(remoteFolderInfo.folders, automaticFolder)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        val openPgpKeyPreference = findPreference(PREFERENCE_OPENPGP_KEY) as? OpenPgpKeyPreference
-        if (openPgpKeyPreference?.handleOnActivityResult(requestCode, resultCode, data) == true) {
-            return
-        }
-        super.onActivityResult(requestCode, resultCode, data)
-    }
-
     private fun getAccount(): Account {
         return viewModel.getAccountBlocking(accountUuid)
     }
@@ -311,7 +249,6 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), ConfirmationDialogFr
 
 
     companion object {
-        internal const val PREFERENCE_OPENPGP = "openpgp"
         private const val ARG_ACCOUNT_UUID = "accountUuid"
         private const val PREFERENCE_INCOMING_SERVER = "incoming"
         private const val PREFERENCE_COMPOSITION = "composition"
@@ -326,9 +263,6 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), ConfirmationDialogFr
         private const val PREFERENCE_ADVANCED_PUSH_SETTINGS = "push_advanced"
         private const val PREFERENCE_REMOTE_SEARCH = "search"
         private const val PREFERENCE_LOCAL_STORAGE_PROVIDER = "local_storage_provider"
-        private const val PREFERENCE_OPENPGP_KEY = "openpgp_key"
-        private const val PREFERENCE_AUTOCRYPT_TRANSFER = "autocrypt_transfer"
-        private const val PREFERENCE_AUTOCRYPT_MANAGE = "autocrypt_manage"
         private const val PREFERENCE_FOLDERS = "folders"
         private const val PREFERENCE_AUTO_EXPAND_FOLDER = "account_setup_auto_expand_folder"
         private const val PREFERENCE_ARCHIVE_FOLDER = "archive_folder"
