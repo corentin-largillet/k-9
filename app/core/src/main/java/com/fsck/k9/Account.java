@@ -12,8 +12,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import android.content.Context;
-import androidx.annotation.Nullable;
-import android.text.TextUtils;
 
 import com.fsck.k9.backend.api.SyncConfig.ExpungePolicy;
 import com.fsck.k9.mail.Address;
@@ -291,7 +289,8 @@ public class Account implements BaseAccount, StoreConfig {
     }
 
     public synchronized void setName(String name) {
-        identities.get(0).setName(name);
+        Identity newIdentity = identities.get(0).withName(name);
+        identities.set(0, newIdentity);
     }
 
     public synchronized boolean getSignatureUse() {
@@ -299,7 +298,8 @@ public class Account implements BaseAccount, StoreConfig {
     }
 
     public synchronized void setSignatureUse(boolean signatureUse) {
-        identities.get(0).setSignatureUse(signatureUse);
+        Identity newIdentity = identities.get(0).withSignatureUse(signatureUse);
+        identities.set(0, newIdentity);
     }
 
     public synchronized String getSignature() {
@@ -307,7 +307,8 @@ public class Account implements BaseAccount, StoreConfig {
     }
 
     public synchronized void setSignature(String signature) {
-        identities.get(0).setSignature(signature);
+        Identity newIdentity = identities.get(0).withSignature(signature);
+        identities.set(0, newIdentity);
     }
 
     @Override
@@ -317,7 +318,8 @@ public class Account implements BaseAccount, StoreConfig {
 
     @Override
     public synchronized void setEmail(String email) {
-        identities.get(0).setEmail(email);
+        Identity newIdentity = identities.get(0).withEmail(email);
+        identities.set(0, newIdentity);
     }
 
     public synchronized String getAlwaysBcc() {

@@ -37,7 +37,7 @@ class AutocryptKeyTransferPresenter internal constructor(
 
         account = preferences.getAccount(accountUuid)
 
-        view.setAddress(account.identities[0].email)
+        view.setAddress(account.identities[0].email!!)
 
         viewModel.autocryptSetupTransferLiveEvent.recall()
     }
