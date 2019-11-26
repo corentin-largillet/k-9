@@ -4,6 +4,7 @@ import com.fsck.k9.helper.NamedThreadFactory
 import com.fsck.k9.ui.account.AccountsLiveData
 import com.fsck.k9.ui.settings.account.AccountSettingsDataStoreFactory
 import com.fsck.k9.ui.settings.account.AccountSettingsViewModel
+import com.fsck.k9.ui.settings.autocrypt.IdentitiesLiveData
 import com.fsck.k9.ui.settings.autocrypt.SettingsAutocryptViewModel
 import com.fsck.k9.ui.settings.export.SettingsExportViewModel
 import com.fsck.k9.ui.settings.general.GeneralSettingsDataStore
@@ -29,7 +30,9 @@ val settingsUiModule = applicationContext {
     viewModel { SettingsExportViewModel(get(), get()) }
     viewModel { SettingsImportViewModel(get(), get()) }
     viewModel { SettingsImportResultViewModel() }
-    viewModel { SettingsAutocryptViewModel(get(), get()) }
+
+    bean { IdentitiesLiveData(get()) }
+    viewModel { SettingsAutocryptViewModel(get()) }
 
     bean { AccountActivator(get(), get(), get(), get()) }
 }
