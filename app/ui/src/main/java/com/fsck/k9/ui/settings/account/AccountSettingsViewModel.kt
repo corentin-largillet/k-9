@@ -14,8 +14,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
 class AccountSettingsViewModel(
-        private val preferences: Preferences,
-        private val folderRepositoryManager: FolderRepositoryManager
+    private val preferences: Preferences,
+    private val folderRepositoryManager: FolderRepositoryManager
 ) : ViewModel() {
     public val accounts = AccountsLiveData(preferences)
     private val accountLiveData = MutableLiveData<Account>()

@@ -51,7 +51,6 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), ConfirmationDialogFr
     }
     private var title: CharSequence? = null
 
-
     override fun onCreatePreferencesFix(savedInstanceState: Bundle?, rootKey: String?) {
         val account = getAccount()
         dataStore = dataStoreFactory.create(account)
@@ -351,7 +350,6 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), ConfirmationDialogFr
         account.openPgpKey = Account.NO_OPENPGP_KEY
         dataStore.saveSettingsInBackground()
     }
-
 
     companion object {
         internal const val PREFERENCE_OPENPGP = "openpgp"
