@@ -4,11 +4,11 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
+import android.view.Menu
+import android.view.MenuItem
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceFragmentCompat.OnPreferenceStartScreenCallback
 import androidx.preference.PreferenceScreen
-import android.view.Menu
-import android.view.MenuItem
 import com.bytehamster.lib.preferencesearch.SearchPreferenceActionView
 import com.bytehamster.lib.preferencesearch.SearchPreferenceResult
 import com.bytehamster.lib.preferencesearch.SearchPreferenceResultListener
@@ -36,8 +36,8 @@ class GeneralSettingsActivity : K9Activity(), OnPreferenceStartScreenCallback, S
                 add(R.id.generalSettingsContainer, GeneralSettingsFragment.create())
             }
         } else {
-            searchQuery = savedInstanceState.getString(KEY_SEARCH_QUERY) ?: error("Missing instance state")
-            searchEnabled = savedInstanceState.getBoolean(KEY_SEARCH_ENABLED)
+            searchQuery = savedInstanceState.getString(KEY_SEARCH_QUERY, "")
+            searchEnabled = savedInstanceState.getBoolean(KEY_SEARCH_ENABLED, false)
         }
     }
 
@@ -47,9 +47,11 @@ class GeneralSettingsActivity : K9Activity(), OnPreferenceStartScreenCallback, S
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putString(KEY_SEARCH_QUERY, searchPreferenceActionView.query.toString())
-        outState.putBoolean(KEY_SEARCH_ENABLED, !searchPreferenceActionView.isIconified)
-        searchPreferenceActionView.onBackPressed()
+        if (::searchPreferenceActionView.isInitialized) {
+            outState.putString(KEY_SEARCH_QUERY, searchPreferenceActionView.query.toString())
+            outState.putBoolean(KEY_SEARCH_ENABLED, !searchPreferenceActionView.isIconified)
+            searchPreferenceActionView.onBackPressed()
+        }
         super.onSaveInstanceState(outState)
     }
 
@@ -131,7 +133,8 @@ class GeneralSettingsActivity : K9Activity(), OnPreferenceStartScreenCallback, S
     }
 
     override fun onPreferenceStartScreen(
-            caller: PreferenceFragmentCompat, preferenceScreen: PreferenceScreen
+        caller: PreferenceFragmentCompat,
+        preferenceScreen: PreferenceScreen
     ): Boolean {
         fragmentTransactionWithBackStack {
             replace(R.id.generalSettingsContainer, GeneralSettingsFragment.create(preferenceScreen.key))
@@ -139,7 +142,6 @@ class GeneralSettingsActivity : K9Activity(), OnPreferenceStartScreenCallback, S
 
         return true
     }
-
 
     companion object {
         private const val KEY_SEARCH_QUERY = "search_query"
