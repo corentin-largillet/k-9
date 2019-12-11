@@ -2,3 +2,6 @@
 	path = patches
 	url = https://github.com/corentin-largillet/K9PatchesOrdissimo
 	branch = master
+[submodule "app/ordissimo"]
+	path = app/ordissimo
+	url = https://github.com/corentin-largillet/Emails-Module-Ordissimo.git
