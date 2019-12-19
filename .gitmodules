@@ -5,6 +5,8 @@
 [submodule "app/ordissimo"]
 	path = app/ordissimo
 	url = https://github.com/corentin-largillet/Emails-Module-Ordissimo.git
+	branch = dev
 [submodule "app/ordissimo-library"]
 	path = app/ordissimo-library
 	url = https://github.com/corentin-largillet/Ordissimo-Library-Module.git
+	branch = master
